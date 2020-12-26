@@ -3,19 +3,25 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/matiasgarcia78/bgh-home-bridge/src/api/solidmation"
 )
 
-var api = solidmation.NewSolidmationApi(solidmation.Auth{User: "XXXX", Password: "XXXX"})
+var api solidmation.SolidmationApi
 
 func setupRouter() *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+
+	r.GET("/test", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"value": "OK"})
+		return
+	})
 
 	r.GET("/bgh/home/bridge/status", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"value":  api.GetStatus()})
+		c.JSON(http.StatusOK, gin.H{"value": api.GetStatus()})
 		return
 	})
 
@@ -80,6 +86,11 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	api = solidmation.NewSolidmationApi(solidmation.Auth{User: os.Getenv("USER"), Password: os.Getenv("PASSWORD")})
 	r := setupRouter()
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	r.Run(":" + port)
 }
